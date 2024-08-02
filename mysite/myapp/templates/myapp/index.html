@@ -6,8 +6,10 @@
         		{% for item in items %}
         		{% comment %} creates links for every product detail page by it's id {% endcomment %}
         		<a href="{% url 'myapp:detail' item.id %}"> 
-
+				
        			ID: {{item.id}} | Name: {{item.name}} | Price: {{item.price}} | Description: {{item.description}} <br/>
+				{% comment %} item's image {% endcomment %}
+				<img src = "{{item.image.url}}" alt = "">
        	 		<a>
          		{% endfor %}
         </h4>

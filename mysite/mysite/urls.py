@@ -14,9 +14,11 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-# import libraries
+# import libraries(modules)
 from django.contrib import admin
 from django.urls import path, include
+from django.conf.urls.static import static
+from django.conf import settings
 
 
 # url pathes
@@ -26,3 +28,5 @@ urlpatterns = [
     # http://127.0.0.1:8000/myapp/
     path('myapp/', include("myapp.urls", namespace="myapp"))
 ]
+# ads media url patterns
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
