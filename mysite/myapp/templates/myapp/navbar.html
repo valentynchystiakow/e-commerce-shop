@@ -1,0 +1,25 @@
+{% load static %}
+{% comment %} Navigation bar block {% endcomment %}
+<nav class = "bg-white shadow-lg">
+    <div class = 'max-w-6x1 mx-auto px-4'>
+        <div class = 'flex justify-between'>
+            <div class = 'flex space-x-7'>
+                <div class='flex'>
+                    {% comment %} E-commerce shop link {% endcomment %}
+                    <a href = "#" class = 'flex items-center px-2 pu-4'>
+                        <img class = "h-8 w-8" src ="{% static 'myapp/images/shop.png' %}" alt ='logo'/>
+                        <span class = "text-gray-500 font-semibold text-xl">E-commerce shop</span>
+                    </a>
+                </div>
+                <div class = "item-center flex space-x-1">
+                    {% comment %} Home link {% endcomment %}
+                    <a href="#" class = "py-4 px-2 text-gray-500 font-semibold border-b-4 border-green-500">Home</a>
+                    {% comment %} About link {% endcomment %}
+                    <a href="#" class = "py-4 px-2 text-gray-500 font-semibold">About</a>
+                    {% comment %} Contacts link {% endcomment %}
+                    <a href="#" class = "py-4 px-2 text-gray-500 font-semibold">Contacts</a>
+                </div>
+            </div>
+     </div>
+    </div>
+</nav>	
