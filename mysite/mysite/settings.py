@@ -38,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
-    "myapp"
+    "myapp",
+    "users"
 ]
 
 MIDDLEWARE = [
@@ -127,3 +128,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # MEDIA URL PATTERNS
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
+
+# Redirect url after user login
+LOGIN_REDIRECT_URL = 'myapp:index'
+# default login root
+LOGIN_URL = 'users:login'
+# Redirect url after user logout
+# LOGOUT_REDIRECT_URL = 'myapp:index'
