@@ -1,20 +1,35 @@
 # import libraries(modules)
-from django.shortcuts import render, redirect
+from django.http.response import HttpResponse as HttpResponse
+import stripe
+# import django libraries(modules)
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse, HttpResponseNotFound
 from django.contrib.auth.decorators import login_required
-from django.views.generic import ListView, DetailView
+from django.views.generic import ListView, DetailView, TemplateView
 from django.views.generic.edit import DeleteView
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
+from django.core.paginator import Paginator
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+import stripe.checkout
+
 # import models
-from .models import Product
+from .models import Product, OrderDetail
 
 
 # Create your views here.
-# function that renders all products page
+# function that renders all products page with search form and pagination
 def index(request):
-    # saves Product model objects in variable
-    items = Product.objects.all()
-    context = {'items': items}
-    # renders index template
+    page_obj = items = Product.objects.all()
+
+    item_name = request.GET.get("search")
+    if item_name != "" and item_name is not None:
+        page_obj = items.filter(name__icontains=item_name)
+
+    paginator = Paginator(page_obj, 2)
+    page_number = request.GET.get("page")
+    page_obj = paginator.get_page(page_number)
+    context = {"page_obj": page_obj}
     return render(request, "myapp/index.html", context)
 
 
@@ -23,14 +38,14 @@ class ProductListView(ListView):
     model = Product
     template_name = 'myapp/index.html'
     context_object_name = 'items'
+    paginate_by = 2
 
-
-# function that renders product by it's id
+# Function Based Product Detail View
 # def indexItem(request, my_id):
     # gets every product's object id and saves it in variable
     #   item = Product.objects.get(id=my_id)
-  #  context = {
-   #     'item': item
+    #  context = {
+    #     'item': item
     # }
     # return render(request, "myapp/detail.html", context=context)
 
@@ -41,6 +56,13 @@ class ProductDetailView(DetailView):
     template_name = "myapp/detail.html"
     context_object_name = "item"
     pk_url_kwarg = "pk"
+
+    # function that gets context data into template(myapp/detail.html)
+    def get_context_data(self, **kwargs):
+        context = super(ProductDetailView, self).get_context_data(**kwargs)
+        # saves publishable key from setting into context variable
+        context["stripe_publishable_key"] = settings.STRIPE_PUBLISHABLE_KEY
+        return context
 
 
 # decorator that requires user to be loggen in order to add items
@@ -95,5 +117,68 @@ def delete_item(request, my_id):
 
 class ProductDeleteView(DeleteView):
     model = Product
-    # url on which user will be redirect after deleting item
     success_url = reverse_lazy("myapp:index")
+
+
+# function that creates payment checkout session
+@csrf_exempt
+def create_checkout_session(request, id):
+    product = get_object_or_404(Product, pk=id)
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    checkout_session = stripe.checkout.Session.create(
+        payment_method_types=["card"],
+        line_items=[
+            {
+                "price_data": {
+                    "currency": "usd",
+                    "product_data": {
+                        "name": product.name,
+                    },
+                    "unit_amount": int(product.price * 100),
+                },
+                "quantity": 1,
+            }
+        ],
+        mode="payment",
+        success_url=request.build_absolute_uri(reverse("myapp:success"))
+        + "?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url=request.build_absolute_uri(reverse("myapp:failed")),
+    )
+
+    # OrderDetail.objects.create(
+    #     customer_email=email,
+    #     product=product, ......
+    # )
+
+    order = OrderDetail()
+    order.product = product
+    order.stripe_payment_intent = checkout_session["payment_intent"]
+    order.amount = int(product.price * 100)
+    order.save()
+
+    # return JsonResponse({'data': checkout_session})
+    return JsonResponse({"sessionId": checkout_session.id})
+
+
+class PaymentSuccessView(TemplateView):
+    template_name = "myapp/payment_success.html"
+
+    def get(self, request, *args, **kwargs):
+        session_id = request.GET.get("session_id")
+        if session_id is None:
+            return HttpResponseNotFound()
+
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        session = stripe.checkout.Session.retrieve(session_id)
+
+        order = get_object_or_404(
+            OrderDetail, stripe_payment_intent=session.payment_intent
+        )
+        order.has_paid = True
+        order.save()
+        return render(request, self.template_name)
+
+
+class PaymentFailedView(TemplateView):
+    template_name = "myapp/payment_failed.html"

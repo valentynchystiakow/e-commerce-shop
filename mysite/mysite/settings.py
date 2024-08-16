@@ -135,3 +135,7 @@ LOGIN_REDIRECT_URL = 'myapp:index'
 LOGIN_URL = 'users:login'
 # Redirect url after user logout
 # LOGOUT_REDIRECT_URL = 'myapp:index'
+
+
+STRIPE_PUBLISHABLE_KEY = 'pk_test_51Po5OCRwjLyeaPU38nw8w4043sGChuTXkYVc4ibNZGjNhSExepwdHQ7mXgYnp8Cp3AHHc450ZkHEQW4o8tbqptiJ00j8zRN4VF'
+STRIPE_SECRET_KEY = 'sk_test_51Po5OCRwjLyeaPU3a1kEKvPRKPXCrMotAsTohwXy3mTQF6885y3TMj6nGkzPgkUNMBW5dWRLqCLdeRKIwYLH6ALO00OH6TRSLt'
